@@ -1,3 +1,4 @@
+
 import os
 import uuid
 import hashlib
@@ -10,7 +11,7 @@ from sqlalchemy import (
     create_engine, Column, Integer, String, Float, Text, DateTime,
     ForeignKey, LargeBinary, func
 )
-from sqlalchemy.orm import declarative_base, sessionmaker, relationship
+from sqlalchemy.orm import declarative_base, sessionmaker, relationship, joinedload
 from sqlalchemy.exc import IntegrityError
 
 # ============================================================
@@ -617,8 +618,12 @@ def customer_home():
     """, unsafe_allow_html=True)
 
     s = db()
-    products = s.query(Product).order_by(Product.rating.desc()).all()
-    artisans = s.query(User).filter_by(role="Artisan").all()
+    products = (s.query(Product)
+                .options(joinedload(Product.artisan))
+                .order_by(Product.rating.desc()).all())
+    artisans = (s.query(User)
+                .options(joinedload(User.artisan_profile))
+                .filter_by(role="Artisan").all())
     s.close()
 
     query = st.text_input("🔎 Search products, crafts or artisans", placeholder="Try: pottery, Jaipur, handloom...")
