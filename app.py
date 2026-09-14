@@ -267,27 +267,24 @@ def placeholder_image():
 
 st.markdown("""
 <style>
-:root { --cc-brown:#6f4528; --cc-orange:#b85c28; --cc-cream:#fbf5eb; }
-.block-container { padding-top: 1.2rem; max-width: 1200px; }
-.cc-hero {
-    padding: 2rem; border-radius: 24px;
-    background: linear-gradient(135deg, #6f4528 0%, #a96032 55%, #d18a4a 100%);
-    color: white; margin-bottom: 1.3rem;
-}
-.cc-hero h1 { font-size: 2.7rem; margin: 0; }
-.cc-hero p { font-size: 1.05rem; opacity: .94; }
-.card {
-    border: 1px solid #eadfce; border-radius: 18px; padding: 1rem;
-    background: #fffdf9; min-height: 160px; margin-bottom: 1rem;
-}
-.metric {
-    border-radius: 16px; padding: 1rem; background: #fff7ec;
-    border: 1px solid #f0dfc8;
-}
-.metric .value { font-size: 1.65rem; font-weight: 700; color:#6f4528; }
-.metric .label { color:#6d6258; font-size:.9rem; }
-.small-muted { color:#766e66; font-size:.88rem; }
-.badge { padding:.2rem .55rem; border-radius:999px; background:#f4e7d7; color:#6f4528; }
+:root{--brown:#5b3823;--terracotta:#b65f35;--sand:#f7efe3;--cream:#fffaf3;--ink:#2e261f;--muted:#756b61;--line:#eadfce;--gold:#d49a4c}
+.stApp{background:#fbf8f2;color:var(--ink)}
+.block-container{max-width:1240px;padding:1.5rem 1.5rem 5rem}
+[data-testid="stSidebar"]{background:linear-gradient(180deg,#4d2e1e,#6b4128);border-right:0}
+[data-testid="stSidebar"] *{color:#fff!important}
+[data-testid="stSidebar"] .stButton button{background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.12);border-radius:12px;text-align:left}
+[data-testid="stSidebar"] .stButton button:hover{background:rgba(255,255,255,.18)}
+.cc-hero{padding:2.3rem 2rem;border-radius:28px;background:linear-gradient(135deg,#4d2e1e 0%,#8d4d2d 58%,#d0924d 100%);color:#fff;margin-bottom:1.5rem;box-shadow:0 14px 40px rgba(91,56,35,.18);position:relative;overflow:hidden}
+.cc-hero:after{content:'✦  ✧  ✦';position:absolute;right:24px;bottom:18px;font-size:30px;opacity:.28;letter-spacing:10px}
+.cc-hero h1{font-size:clamp(2rem,5vw,3.3rem);line-height:1.05;margin:0 0 .55rem;font-weight:800}.cc-hero p{font-size:1.05rem;opacity:.92;margin:.2rem 0}
+.section-title{font-size:1.45rem;font-weight:800;margin:1.4rem 0 .75rem}.section-sub{color:var(--muted);margin-top:-.45rem;margin-bottom:1rem}
+.card{border:1px solid var(--line);border-radius:20px;padding:1rem;background:#fffdf9;box-shadow:0 5px 18px rgba(74,49,29,.06);margin-bottom:1rem;transition:.2s}.card:hover{box-shadow:0 10px 28px rgba(74,49,29,.12);transform:translateY(-2px)}
+.metric{border-radius:18px;padding:1.15rem;background:linear-gradient(145deg,#fffaf2,#f7ead8);border:1px solid #eedbc0;box-shadow:0 5px 15px rgba(91,56,35,.05)}.metric .value{font-size:1.65rem;font-weight:800;color:var(--brown)}.metric .label{color:var(--muted);font-size:.9rem;margin-top:.15rem}
+.badge{display:inline-block;padding:.25rem .65rem;border-radius:999px;background:#f3e2cc;color:var(--brown);font-size:.78rem;font-weight:700}.small-muted{color:var(--muted);font-size:.88rem}
+.stButton>button{border-radius:12px;border:1px solid #dfcdb7;font-weight:700;min-height:2.65rem}.stButton>button[kind="primary"]{background:linear-gradient(135deg,#7b4328,#b65f35);color:white;border:0}
+.stTextInput input,.stTextArea textarea,.stSelectbox div[data-baseweb="select"],.stNumberInput input{border-radius:12px!important}
+[data-testid="stImage"] img{border-radius:16px;max-height:260px;object-fit:cover}
+@media(max-width:700px){.block-container{padding:.9rem .8rem 4.5rem}.cc-hero{padding:1.55rem 1.2rem;border-radius:20px}.cc-hero h1{font-size:2rem}.card{border-radius:16px}.stButton>button{min-height:3rem}}
 </style>
 """, unsafe_allow_html=True)
 
@@ -612,72 +609,89 @@ def artisan_earnings(u):
 def customer_home():
     st.markdown("""
     <div class="cc-hero">
-      <h1>CraftConnect 🧶</h1>
-      <p>Discover authentic Indian crafts, directly from artisans.</p>
+      <h1>Discover India's Living Craft</h1>
+      <p>Authentic handmade products, directly from the people who create them.</p>
+      <p>Support local artisans • Preserve traditions • Shop with purpose</p>
     </div>
     """, unsafe_allow_html=True)
 
     s = db()
-    products = (s.query(Product)
-                .options(joinedload(Product.artisan))
-                .order_by(Product.rating.desc()).all())
-    artisans = (s.query(User)
-                .options(joinedload(User.artisan_profile))
-                .filter_by(role="Artisan").all())
+    products = s.query(Product).options(joinedload(Product.artisan)).order_by(Product.rating.desc()).all()
+    artisans = s.query(User).options(joinedload(User.artisan_profile)).filter_by(role="Artisan").all()
+    # Copy the small values needed by the UI before closing the session.
+    product_rows = []
+    for p in products:
+        product_rows.append({"id":p.id,"name":p.name,"image":p.image,"category":p.category,
+            "craft_type":p.craft_type,"price":p.price,"stock":p.stock,"rating":p.rating,
+            "description":p.description,"artisan_name":p.artisan.name if p.artisan else "Craft Artisan"})
+    artisan_rows = []
+    for a in artisans:
+        pr=a.artisan_profile
+        artisan_rows.append({"name":a.name,"craft":pr.craft_type if pr else "Traditional Craft",
+            "location":pr.location if pr else "India","bio":pr.bio if pr else "Skilled Indian artisan."})
     s.close()
 
-    query = st.text_input("🔎 Search products, crafts or artisans", placeholder="Try: pottery, Jaipur, handloom...")
-    cat = st.selectbox("Category", CATEGORIES)
-    c1, c2, c3 = st.columns(3)
-    with c1: min_price = st.number_input("Min price ₹", min_value=0, value=0)
-    with c2: max_price = st.number_input("Max price ₹", min_value=0, value=10000)
-    with c3: min_rating = st.slider("Minimum rating", 0.0, 5.0, 0.0, 0.1)
+    st.markdown('<div class="section-title">What are you looking for?</div>', unsafe_allow_html=True)
+    query = st.text_input("", placeholder="🔎  Search pottery, handloom, Jaipur, artisan...", label_visibility="collapsed")
+    cats = ["All","Pottery","Handloom","Woodcraft","Jewelry","Painting","Embroidery","Metal Craft","Home Decor"]
+    cat_cols=st.columns(len(cats))
+    if "customer_cat" not in st.session_state: st.session_state.customer_cat="All"
+    for i,c in enumerate(cats):
+        with cat_cols[i]:
+            if st.button(c, key=f"cat_{c}", use_container_width=True):
+                st.session_state.customer_cat=c
+                st.rerun()
+    cat=st.session_state.customer_cat
 
-    filtered = []
-    q = query.strip().lower()
-    for p in products:
-        artisan_name = p.artisan.name.lower() if p.artisan else ""
-        text = f"{p.name} {p.category} {p.craft_type} {artisan_name}".lower()
-        if q and q not in text:
-            continue
-        if cat != "All" and p.category != cat:
-            continue
-        if not (min_price <= p.price <= max_price):
-            continue
-        if p.rating < min_rating:
-            continue
+    with st.expander("⚙️ Filters"):
+        f1,f2,f3=st.columns(3)
+        with f1: min_price=st.number_input("Minimum price ₹",0,100000,0,100)
+        with f2: max_price=st.number_input("Maximum price ₹",0,100000,10000,100)
+        with f3: min_rating=st.slider("Minimum rating",0.0,5.0,0.0,.1)
+
+    q=query.strip().lower()
+    filtered=[]
+    for p in product_rows:
+        text=f"{p['name']} {p['category']} {p['craft_type']} {p['artisan_name']}".lower()
+        if q and q not in text: continue
+        if cat!="All" and p["category"]!=cat: continue
+        if not(min_price<=p["price"]<=max_price): continue
+        if p["rating"]<min_rating: continue
         filtered.append(p)
 
-    st.subheader("Featured Products")
+    st.markdown(f'<div class="section-title">Featured crafts <span class="badge">{len(filtered)} items</span></div>', unsafe_allow_html=True)
+    st.markdown('<div class="section-sub">Handpicked products from verified artisan makers.</div>', unsafe_allow_html=True)
     if not filtered:
-        st.info("No products match your filters.")
-        return
+        st.info("No products match your filters. Try another category or search term.")
+    else:
+        cols=st.columns(4)
+        for i,pd in enumerate(filtered[:12]):
+            with cols[i%4]:
+                st.markdown('<div class="card">',unsafe_allow_html=True)
+                if pd["image"]: st.image(BytesIO(pd["image"]),use_container_width=True)
+                else: st.markdown("<div style='font-size:58px;text-align:center;padding:30px 0'>🧶</div>",unsafe_allow_html=True)
+                st.markdown(f"**{pd['name']}**")
+                st.caption(f"{pd['category']} · ⭐ {pd['rating']:.1f}")
+                st.markdown(f"### ₹{pd['price']:,.0f}")
+                st.caption(f"By {pd['artisan_name']} · {pd['stock']} available")
+                if st.button("View product →",key=f"view_{pd['id']}",use_container_width=True):
+                    st.session_state.selected_product=pd["id"]
+                    st.session_state.page="product"
+                    st.rerun()
+                st.markdown('</div>',unsafe_allow_html=True)
 
-    cols = st.columns(4)
-    for i, p in enumerate(filtered[:12]):
-        with cols[i % 4]:
-            st.markdown('<div class="card">', unsafe_allow_html=True)
-            if p.image:
-                st.image(BytesIO(p.image), use_container_width=True)
-            else:
-                st.markdown("## 🧶")
-            st.markdown(f"**{p.name}**")
-            st.write(f"₹{p.price:,.0f}")
-            st.caption(f"{p.category} · ⭐ {p.rating:.1f}")
-            if st.button("View Details", key=f"view_{p.id}"):
-                st.session_state.selected_product = p.id
-                st.session_state.page = "product"
-                st.rerun()
-            st.markdown("</div>", unsafe_allow_html=True)
-
-    st.subheader("Artisan Highlights")
-    acols = st.columns(min(3, len(artisans)) or 1)
-    for i, a in enumerate(artisans[:3]):
-        with acols[i % len(acols)]:
-            profile = a.artisan_profile
-            st.markdown(f"**{a.name}**")
-            st.caption(f"{profile.craft_type if profile else 'Traditional Craft'} · {profile.location if profile else 'India'}")
-            st.write((profile.bio if profile else "Skilled Indian artisan.")[:140])
+    st.markdown('<div class="section-title">Meet the makers</div>',unsafe_allow_html=True)
+    st.markdown('<div class="section-sub">Real people, real skills, centuries of craft knowledge.</div>',unsafe_allow_html=True)
+    if artisan_rows:
+        acols=st.columns(min(3,len(artisan_rows)))
+        for i,a in enumerate(artisan_rows[:3]):
+            with acols[i%len(acols)]:
+                st.markdown('<div class="card">',unsafe_allow_html=True)
+                st.markdown(f"### 🧑‍🎨 {a['name']}")
+                st.markdown(f"<span class='badge'>{a['craft']}</span>",unsafe_allow_html=True)
+                st.caption(f"📍 {a['location']}")
+                st.write(a['bio'][:160])
+                st.markdown('</div>',unsafe_allow_html=True)
 
 
 def product_details():
