@@ -1,17 +1,46 @@
-# craftconnect
+# CraftConnect
 
-A new Flutter project.
+AI-powered handcrafted marketplace connecting artisans with customers.
 
-## Getting Started
+## 🚀 Features
 
-This project is a starting point for a Flutter application.
+- Customer and Artisan authentication
+- Artisan product listing
+- Cloudinary image management
+- AI-assisted product cataloging with Google Gemini
+- Marketplace browsing
+- Shopping cart and checkout
+- Order management
+- Customer support and refund requests
+- Multi-language support
 
-A few resources to get you started if this is your first Flutter project:
+## 🛠️ Tech Stack
 
-- [Learn Flutter](https://docs.flutter.dev/get-started/learn-flutter)
-- [Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Flutter learning resources](https://docs.flutter.dev/reference/learning-resources)
+| Technology | Purpose |
+|---|---|
+| Flutter / Dart | Mobile application development |
+| Firebase Authentication | Customer and Artisan authentication |
+| Cloud Firestore | Products, users, orders and support data |
+| Cloudinary | Product and profile image management |
+| Google Gemini AI | AI-assisted product cataloging |
+| Android Studio / VS Code | Development and testing |
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+## 📱 APK
+
+Download the latest Android APK from:
+
+`releases/CraftConnect.apk`
+
+## 🤖 AI Cataloging
+
+Gemini AI analyzes product images and suggests catalog information such as title, craft type, material, color and description.
+
+AI cataloging is optional. Artisans can manually enter and edit product details if AI is unavailable.
+
+## 🔐 Security
+
+API keys and private credentials should be supplied through runtime configuration and should not be committed to the repository.
+
+## 📌 Project
+
+CraftConnect is developed as a Smart India Hackathon project focused on digitally connecting artisans with customers.
