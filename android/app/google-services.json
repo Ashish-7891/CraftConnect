@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1044742355627",
+    "project_id": "craftconnect-3cd55",
+    "storage_bucket": "craftconnect-3cd55.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1044742355627:android:dd2607b42e8370afc815ee",
+        "android_client_info": {
+          "package_name": "com.sih.craftconnect.craftconnect"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCZ8QYqrZB--UXaILgfn0YiIcQLj3U3Sfw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

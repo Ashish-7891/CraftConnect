@@ -1,0 +1,110 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    // USERS COLLECTION
+    // A user can read and write only their own profile
+    match /users/{userId} {
+      allow read, write: if isOwner(userId);
+      allow create: if isAuthenticated() && request.auth.uid == userId;
+    }
+
+    // PRODUCTS COLLECTION
+    // Authenticated users can read products
+    // Only the artisan owner can create or delete their products
+    // Artisan owner can update all product fields; authenticated customers can decrement stock on purchase
+    match /products/{productId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() 
+        && request.resource.data.artisanId == request.auth.uid;
+      allow update: if isAuthenticated() && (
+        // Artisan owner can update any field of their product
+        resource.data.artisanId == request.auth.uid ||
+        // Customer can only decrement inventory stock on checkout
+        (
+          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['stock']) &&
+          request.resource.data.stock is number
+        )
+      );
+      allow delete: if isAuthenticated() 
+        && resource.data.artisanId == request.auth.uid;
+    }
+
+    // ORDERS COLLECTION
+    // Customers can create orders and read their own orders
+    // Artisans can read orders containing their products and update status
+    match /orders/{orderId} {
+      // Authenticated customers can create an order only if customerId matches their own auth UID
+      allow create: if isAuthenticated() 
+        && request.resource.data.customerId == request.auth.uid
+        && request.resource.data.orderId is string
+        && request.resource.data.items is list
+        && request.resource.data.artisanIds is list
+        && request.resource.data.totalAmount is number
+        && request.resource.data.totalAmount >= 0
+        && request.resource.data.status is string
+        && request.resource.data.createdAt is timestamp;
+
+      // Only the customer who placed the order or artisans whose products are in the order can read it
+      allow read: if isAuthenticated() && (
+        resource.data.customerId == request.auth.uid ||
+        request.auth.uid in resource.data.artisanIds
+      );
+
+      // Artisans can update order status; Customers can cancel or update their own order
+      allow update: if isAuthenticated() && (
+        request.auth.uid in resource.data.artisanIds ||
+        resource.data.customerId == request.auth.uid
+      );
+
+      // Orders cannot be deleted to preserve audit history and earnings calculations
+      allow delete: if false;
+    }
+
+    // SUPPORT & REFUND REQUESTS COLLECTION
+    // Authenticated customers can submit issue reports and refund requests for their orders
+    match /support_requests/{requestId} {
+      allow create: if isAuthenticated()
+        && request.resource.data.customerId == request.auth.uid
+        && request.resource.data.orderId is string
+        && request.resource.data.type is string
+        && request.resource.data.createdAt is timestamp;
+
+      // Only the customer who submitted the request can read it
+      allow read: if isAuthenticated() && resource.data.customerId == request.auth.uid;
+
+      // Immutable audit log
+      allow update, delete: if false;
+    }
+
+    // REFUND REQUESTS COLLECTION
+    // Stored under refund_requests/{requestId}
+    match /refund_requests/{requestId} {
+      allow create: if isAuthenticated()
+        && request.resource.data.customerId == request.auth.uid
+        && request.resource.data.orderId is string
+        && request.resource.data.artisanId is string
+        && request.resource.data.amount is number
+        && request.resource.data.status == "PENDING"
+        && request.resource.data.createdAt is timestamp;
+
+      // Customer who requested the refund or the artisan can read it
+      allow read: if isAuthenticated() && (
+        resource.data.customerId == request.auth.uid ||
+        resource.data.artisanId == request.auth.uid
+      );
+
+      // Immutable audit log
+      allow update, delete: if false;
+    }
+  }
+}
